@@ -1,5 +1,5 @@
 import './App.css';
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import app from './firebase.init';
 import 'bootstrap/dist/css/bootstrap.css';
 import Form from 'react-bootstrap/Form';
@@ -15,12 +15,17 @@ function App() {
   const [password, setPassword] = useState('');
   const [validated, setValidated] = useState(false);
   const [error, setError] = useState('');
+  const [registered, setRegistered] = useState(false);
 
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
   }
   const handlePasswordBlur = (event) => {
     setPassword(event.target.value);
+  }
+
+  const handleRegisterChange = (event) => {
+    setRegistered(event.target.checked);
   }
 
   const handleFormSubmit = (event) => {
@@ -39,22 +44,34 @@ function App() {
     setError('');
     setValidated(true);
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((result) => {
-        const user = result.user;
-        console.log(user);
-      })
-      .catch((error) => {
-        console.error(error)
-      })
-
+    if (registered) {
+      signInWithEmailAndPassword(auth, email, password)
+        .then((result) => {
+          const user = result.user;
+          console.log(user);
+        })
+        .catch((error) => {
+          console.log(error);
+          setError(error.message);
+        });
+    } else {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((result) => {
+          const user = result.user;
+          console.log(user);
+          setEmail('');
+          setPassword('');
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+        })
+    }
     console.log('submit');
   }
-
-
   return (
     <div className='w-50 mx-auto mt-3'>
-      <h2 className="text-primary">Email Password Authentication</h2>
+      <h2 className="text-primary">Please {registered ? 'Login' : 'Register'}</h2>
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
         <Form.Group className="mb-3" controlId="formBasicEmail">
           <Form.Label>Email address</Form.Label>
@@ -78,8 +95,14 @@ function App() {
           </Form.Control.Feedback>
         </Form.Group>
         <p className='text-danger'>{error}</p>
+
+        {/* already register code  */}
+        <Form.Group className="mb-3" controlId="formBasicCheckbox">
+          <Form.Check onChange={handleRegisterChange} type="checkbox" label="AlReady Register?" />
+        </Form.Group>
+
         <Button onSubmit={handleFormSubmit} variant="primary" type="submit">
-          Submit
+          {registered ? 'Login' : 'Register'}
         </Button>
       </Form>
 
